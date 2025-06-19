@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Satirical Emoticon Dictionary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Ensure html and body take full viewport height and width */
+        html, body {
+            height: 100%;
+            width: 100%; /* Changed to 100% from 100vw for potentially better compatibility */
+            margin: 0;
+            padding: 0;
+            overflow: auto; /* Allow scrolling if content exceeds viewport */
+        }
+
+        /* General body styling */
+        body {
+            font-family: 'Roboto Mono', monospace; /* Monospace for all text */
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: flex-start; /* Align content to the top */
+            min-height: 100vh; /* Use min-height for full viewport height */
+            background-color: #f0f0f0; /* Slightly lighter background */
+            color: #2c3e50;
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
+        /* Main containers */
+        .dictionary-container, .detail-container {
+            background-color: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Lighter shadow */
+            padding: 30px; /* Internal padding */
+            text-align: center;
+            max-width: 850px; /* Max width for readability */
+            width: 100%; /* Take full width up to max-width */
+            min-height: 100vh; /* Ensure minimum height to fill viewport */
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            border: 1px solid #e0e0e0; /* Very subtle outer border */
+            box-sizing: border-box; /* Ensure padding is included in width */
+            flex-grow: 1; /* Allow container to grow to fill space */
+            /* Removed external margin to allow truly edge-to-edge content if desired by flexbox */
+        }
+
+        /* Title styling */
+        h1 {
+            font-size: 2.6em;
+            color: #1a252f;
+            margin-bottom: 5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Subtitle/description */
+        .subtitle {
+            font-size: 1.05em;
+            color: #555555;
+            margin-bottom: 20px;
+        }
+
+        /* Search input styling */
+        .search-container {
+            margin-bottom: 25px;
+        }
+
+        #searchInput {
+            width: calc(100% - 30px);
+            padding: 12px 15px;
+            border: 2px solid #cccccc; /* Slightly lighter border */
+            border-radius: 4px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1em;
+            color: #ffb6c1; /* Pastel pink for input text */
+            background-color: #fbfbfb; /* Very light background for input */
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #searchInput::placeholder { /* Style placeholder text */
+            color: #ffb6c1; /* Pastel pink for placeholder */
+            opacity: 0.8; /* Slightly transparent */
+        }
+
+        #searchInput:focus {
+            border-color: #999999; /* Darker focus border */
+            box-shadow: 0 0 0 3px rgba(153, 153, 153, 0.1); /* Lighter focus glow */
+            background-color: #ffffff;
+        }
+
+        /* Emoticon list container */
+        .emoticon-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 10px; /* Reduced gap between entries */
+            text-align: left;
+        }
+
+        /* Individual emoticon card - Dictionary-like formatting, allowing definition wrap */
+        .emoticon-card {
+            background-color: #ffffff;
+            border-radius: 0;
+            padding: 8px 15px;
+            box-shadow: none;
+            transition: background-color 0.1s ease;
+            display: flex;
+            align-items: flex-start; /* Align emoticon and definition to the top of their container */
+            justify-content: flex-start;
+            border: 0;
+            border-bottom: 1px dashed #e0e0e0;
+            min-height: auto; /* Allow height to adjust based on content */
+        }
+
+        .emoticon-card:last-child {
+            border-bottom: none;
+        }
+
+        .emoticon-card:hover {
+            background-color: #f5f5f5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .emoticon-card .emoticon-text {
+            font-family: 'Roboto Mono', monospace; /* Explicitly set monospace for ASCII art */
+            font-size: 1.6em; /* Adjusted emoticon text size (smaller) */
+            color: #1a252f;
+            font-weight: 700;
+            margin-right: 15px; /* More space between emoticon and definition */
+            flex-shrink: 0; /* Prevent emoticon from shrinking */
+            line-height: normal; /* Ensure natural line height for ASCII art */
+            white-space: pre-wrap; /* Preserve white space and allow wrapping */
+            word-break: break-all; /* Break words to prevent overflow if a single word is too long */
+        }
+
+        .emoticon-card .emoticon-definition {
+            font-size: 0.9em; /* Slightly increased definition text size for readability */
+            color: #444444;
+            line-height: 1.5; /* Standard line height for readability */
+            margin-top: 0;
+            padding-left: 10px; /* Indentation for definition */
+            border-left: 2px solid #ccc; /* Subtle line for definition separation */
+            margin-bottom: 0; /* No bottom margin within the flex item */
+            white-space: normal; /* Allow definition to wrap */
+            word-wrap: break-word; /* Ensure long words break */
+            overflow: visible; /* Allow overflow to show (no truncation) */
+            text-overflow: clip; /* No ellipsis when wrapping */
+            flex-grow: 1; /* Allow definition to take available space */
+            cursor: pointer; /* Indicate it's clickable */
+            text-decoration: underline; /* Suggest clickability */
+            text-underline-offset: 2px;
+            color: #007bff; /* Link color for definition */
+        }
+        .emoticon-card .emoticon-definition:hover {
+            color: #0056b3; /* Darker blue on hover */
+        }
+
+
+        /* Message for no results */
+        #noResultsMessage {
+            color: #a02020;
+            font-size: 1.05em;
+            margin-top: 25px;
+            font-weight: 700;
+        }
+
+        /* Detail Page Styling */
+        #detailPageView {
+            text-align: left;
+            display: none; /* Hidden by default */
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: flex-start; /* Changed from center to flex-start for better alignment of text with tall emoticons */
+            margin-bottom: 20px;
+        }
+
+        .detail-emoticon {
+            font-family: 'Roboto Mono', monospace; /* Explicitly set monospace for ASCII art */
+            font-size: 3.5em; /* Larger emoticon on detail page (smaller) */
+            color: #1a252f;
+            font-weight: 700;
+            margin-right: 20px;
+            line-height: normal; /* Ensure natural line height for ASCII art */
+            white-space: pre-wrap; /* Preserve white space and allow wrapping */
+            word-break: break-all; /* Break words to prevent overflow if a single word is too long */
+            flex-shrink: 0; /* Prevent the emoticon from shrinking */
+        }
+
+        .detail-main-definition {
+            font-size: 1.1em; /* Smaller */
+            color: #333333;
+            line-height: 1.6;
+            white-space: normal; /* Allow definition to wrap */
+            word-wrap: break-word; /* Ensure long words break */
+            flex: 1; /* Allow definition to take remaining space in detail-header */
+        }
+
+        .detail-section {
+            margin-top: 20px; /* Slightly reduced margin */
+            padding-top: 12px; /* Slightly reduced padding */
+            border-top: 1px dashed #e0e0e0;
+        }
+
+        .detail-section h2 {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.4em; /* Smaller */
+            color: #2c3e50;
+            margin-bottom: 8px; /* Slightly reduced margin */
+            font-weight: 700;
+        }
+
+        .detail-section p, .detail-section ul {
+            font-size: 0.9em; /* Smaller */
+            color: #444444;
+            line-height: 1.6;
+            margin-bottom: 8px; /* Slightly reduced margin */
+            white-space: normal; /* Allow definition to wrap */
+            word-wrap: break-word; /* Ensure long words break */
+        }
+
+        .detail-section ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+
+        .detail-section ul li {
+            margin-bottom: 4px; /* Slightly reduced margin */
+        }
+
+        #backButton {
+            background-color: #666666; /* Gray back button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #backButton:hover {
+            background-color: #444444;
+        }
+
+        /* Responsive adjustments for detail page */
+        @media (max-width: 768px) {
+            .detail-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .detail-emoticon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .detail-main-definition {
+                font-size: 1.05em; /* Further adjustment for smaller screens */
+            }
+            .detail-section h2 {
+                font-size: 1.25em; /* Further adjustment for smaller screens */
+            }
+            .detail-section p, .detail-section ul {
+                font-size: 0.85em; /* Further adjustment for smaller screens */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .detail-emoticon {
+                font-size: 2.8em; /* Even smaller for very small screens */
+            }
+            .detail-main-definition {
+                font-size: 0.95em; /* Even smaller for very small screens */
+            }
+            .detail-section h2 {
+                font-size: 1.1em; /* Even smaller for very small screens */
+            }
+            .detail-section p, .detail-section ul {
+                font-size: 0.8em; /* Even smaller for very small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="dictionaryView" class="dictionary-container">
+        <h1>The Satirical Emoticon Dictionary</h1>
+        <p class="subtitle">Unveiling the true, often performative, meanings behind your favorite ASCII art expressions, now with enhanced terminal-esque clarity.</p>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Query the database for profound digital insights...">
+        </div>
+
+        <div class="emoticon-list" id="emoticonList">
+            <!-- Added a loading message to see if basic HTML renders -->
+            <h2>Loading emoticons...</h2>
+        </div>
+
+        <p id="noResultsMessage">No emoticons match your current query. Please refine your digital search parameters.</p>
+    </div>
+
+    <div id="detailPageView" class="detail-container">
+        <div class="detail-header">
+            <div class="detail-emoticon" id="detailEmoticon"></div>
+            <p class="detail-main-definition" id="detailMainDefinition"></p>
+        </div>
+
+        <div class="detail-section">
+            <h2>Expanded Insight</h2>
+            <p id="detailExpandedDefinition"></p>
+        </div>
+
+        <div class="detail-section">
+            <h2>Synonyms (Digital Doppelgängers)</h2>
+            <ul id="detailSynonyms"></ul>
+        </div>
+
+        <div class="detail-section">
+            <h2>Digital Origin</h2>
+            <p id="detailOrigin"></p>
+        </div>
+
+        <div class="detail-section">
+            <h2>Usage Examples (Caution Advised)</h2>
+            <ul id="detailExamples"></ul>
+        </div>
+
+        <button id="backButton">Back to Dictionary</button>
+    </div>
+
+    <script>
+        console.log("Script execution started.");
+
+        // Array of emoticons and their satirical definitions (over 200 entries now)
+        const emoticonData = [
+            { emoticon: ':)', definition: "The default setting for 'I have acknowledged your message and possess no strong feelings about it whatsoever.'", expandedDefinition: "This ubiquitous facial gesture is the digital equivalent of a polite nod. It signifies that the sender has indeed received your missive and has, at a minimum, processed enough of its content to confirm its existence. Any deeper emotional resonance is purely coincidental. Ideal for ending conversations swiftly without appearing rude.", synonyms: [':-)'], origin: "A relic from the primordial soup of online chat rooms, designed for maximal efficiency in minimal character count. A true pioneer in emotional brevity.", examples: ["'Received your 30-page report :)'", "'Thanks for the offer, but I'll decline :)'"] },
+            { emoticon: ':D', definition: "Extreme mirth, typically deployed when someone says something mildly amusing or when you've just received free pizza.", expandedDefinition: "This wide-mouthed grin indicates an exaggerated level of digital glee. It's rarely used for actual unbridled joy, but rather for performative enthusiasm when a simple ':)' just doesn't cut it. Often seen after a moderately funny meme or the promise of free food. The louder sibling of the polite smile.", synonyms: ['xD', 'XD'], origin: "Evolved from the need to digitally overcompensate for genuinely awkward silence in text-based interactions.", examples: ["'Omg that was hilarious :D'", "'Free donuts in the breakroom :D'"] },
+            { emoticon: 'XD', definition: "Reserved for content that causes one to contort their face into a painful, non-Euclidean geometry.", expandedDefinition: "The apex of online hilarity. Laughter so intense it renders the sender temporarily blind. Often signifies a joke so exquisitely terrible or an observation so profoundly absurd that mere ':D' cannot contain the digital convulsions. May require a brief recovery period.", synonyms: ['x_D', 'xD'], origin: "Believed to have emerged from early internet forums where users attempted to convey the physical discomfort of extreme laughter through ASCII.", examples: ["'My cat just tried to fight its reflection XD'", "'That GIF is my life XD'"] },
+            { emoticon: ';)', definition: "The digital equivalent of an awkward wink. Can mean anything from 'I\'m flirting (badly)' to 'I just made a terribly inappropriate joke that only I understand.'", expandedDefinition: "A highly versatile yet dangerously ambiguous punctuation mark. It suggests shared secrets, subtle sarcasm, or the sender's misguided attempt at charm. Context is not just king; it's the entire monarchy. Use with extreme caution, as misunderstandings often lead to digital tumbleweeds or HR complaints.", synonyms: ['(^_-)'], origin: "The brainchild of a mischievous programmer who enjoyed sowing seeds of confusion in the nascent digital landscape.", examples: ["'I'll 'work late' tonight ;) '", "'Did you see what they wore to the meeting ;) '"] },
+            { emoticon: ':(', definition: "A single drop of digital melancholy. For when your internet connection drops, or you've run out of coffee. Not suitable for actual existential dread.", expandedDefinition: "This simple downturned mouth conveys a superficial sadness. It's the go-to for minor inconveniences like a slow download or a forgotten charger. For truly soul-crushing despair, please consult a therapist, not a series of punctuation marks. A true testament to the trivialization of digital sadness.", synonyms: ['T_T', ';-;'], origin: "Born from the frustration of early modem users, designed to convey a fleeting moment of inconvenience rather than genuine sorrow.", examples: ["'My Wi-Fi is out :('", "'They ran out of my favorite snack :('"] },
+            { emoticon: ':O', definition: "Shock and awe, or merely the sudden realization you forgot to hit 'send' on that urgent email. Often precedes a frantic scramble.", expandedDefinition: "A wide-eyed gasp of digital astonishment. This emoticon is frequently deployed when faced with genuinely surprising news, an anexpected plot twist, or the sudden, horrifying realization that you've just sent a message to the wrong group chat. High levels of digital adrenaline may follow.", synonyms: ['=O', 'o_O'], origin: "Developed to mimic the universal human expression of immediate, often non-verbal, surprise, suitable for the rapid-fire nature of early instant messaging.", examples: ["'They just announced a surprise audit :O'", "'I accidentally deleted my entire project folder :O'"] },
+            { emoticon: 'O_o', definition: "The 'I\'m not confused, you\'re confused' emoticon. Also used when confronted with unexpected stupidity or an inexplicable plot twist in a reality TV show.", expandedDefinition: "This asymmetric gaze suggests a profound level of digital bewilderment. It's the go-to for situations that defy logic, common sense, or basic human decency. Often accompanies a silent 'What just happened?' or 'Are you serious?' when words are simply insufficient to capture the depth of absurdity.", synonyms: ['o.O', '?_?'], origin: "Emerged from the collective exasperation of early internet users trying to comprehend increasingly bizarre online content.", examples: ["'They think the earth is flat O_o'", "'He wore WHAT to the gala? O_o'"] },
+            { emoticon: ':-/', definition: "Skepticism. Also known as the 'I\'m judging you silently' face, or 'This sounds suspiciously like work.'", expandedDefinition: "This half-frown, half-straight-line conveys a non-committal doubt or mild disapproval. It's the digital equivalent of a raised eyebrow. Often used when someone proposes a questionable idea, or when you're being asked to do something that vaguely resembles effort. A truly versatile expression of digital wariness.", synonyms: ['-_-' , ':-|'], origin: "Created for situations where full enthusiasm was unwarranted, but outright negativity was too much effort.", examples: ["'You want me to work on Saturday :-/?'", "'That sounds... complicated :-/'"] },
+            { emoticon: ':P', definition: "The playful tongue poke. Ideal for when you\'ve delivered a mild insult and wish to immediately diffuse the tension by appearing adorably impish. Often fails.", expandedDefinition: "This mischievous emoticon attempts to soften the blow of a teasing remark or a cheeky comment. It's a digital 'just kidding!' but often misfires, leaving the recipient wondering if you're actually being passive-aggressive. Best used among close digital acquaintances.", synonyms: ['=P', ':p'], origin: "A playful offshoot from basic smileys, allowing for a hint of digital sass without resorting to outright rudeness.", examples: ["'You're terrible at this :P'", "'I stole your cookie :P'"] },
+            { emoticon: 'xD', definition: "A slightly less intense, yet equally performative, version of 'XD'. For when something is funny, but not 'fall-off-your-chair-and-spill-your-drink' funny.", expandedDefinition: "The 'chuckle' emoticon. It signifies amusement, but not the kind that causes physical incapacitation. Ideal for a decent joke, a clever pun, or when you feel obliged to acknowledge humor without fully committing to grand digital gestures.", synonyms: ['x_d', 'XD'], origin: "A simplified version of 'XD', for when extreme laughter was too much effort to type.", examples: ["'That meme was pretty good xD'", "'You actually fell for that? xD'"] },
+            { emoticon: '^_^', definition: "The 'I\'m cute and harmless, please don\'t be angry' emoticon. Frequently used when apologizing for minor infractions or requesting favors.", expandedDefinition: "This demure, cat-like smile is the digital embodiment of innocence. It's frequently deployed as a preemptive apology or to soften a slightly unreasonable request. Its wide-eyed optimism is often a calculated maneuver to avoid digital repercussions. A master of digital manipulation.", synonyms: ['=^_^='], origin: "Popularized in early anime and manga communities online, used to convey a humble or bashful expression.", examples: ["'I accidentally deleted your files ^_^'", "'Can I borrow a million dollars? ^_^'"] },
+            { emoticon: '>_>', definition: "The 'side-eye' of the internet. Implies suspicion, disapproval, or the sneaking suspicion that someone is about to steal your last cookie.", expandedDefinition: "This sideways glance conveys a potent mix of skepticism and judgment. It's the digital equivalent of a slow, disbelieving look. Often used when a claim is dubious, a story sounds too good to be true, or you suspect foul play in the digital realm. Beware the '>_>'", synonyms: ['<_<', '-_-'], origin: "A direct translation of the physical side-eye, adapted for text-based communication to express non-verbal skepticism.", examples: ["'You finished all the snacks? >_>'", "'He said he worked all weekend >_>'"] },
+            { emoticon: '<_<', definition: "The other side-eye. Used interchangeably with '>_>', because symmetry is important, even in passive-aggressive digital communication.", expandedDefinition: "Functionally identical to '>_>', this emoticon simply completes the set. It reinforces the idea that digital judgment knows no directional bias. The passive-aggressive twin of the side-eye.", synonyms: ['>_>', '-_-'], origin: "A necessary companion to '>_>', completing the visual repertoire of digital skepticism.", examples: ["'You really believed that spam email? <_<'", "'She said she's 'busy' <_< '"] },
+            { emoticon: 'T_T', definition: "Symbolic tears. For when your favorite character dies in a video game, or you spilled your entire bag of chips. Actual tears are optional.", expandedDefinition: "These vertical lines represent overflowing digital sorrow. While it can signify genuine sadness over trivial matters (like a dropped ice cream cone), it's also widely used for dramatic effect or exaggerated sympathy. Emotional range: from mild disappointment to digital wailing.", synonyms: [':(', ';-;'], origin: "A minimalist interpretation of crying eyes, allowing for quick expression of distress in text-based environments.", examples: ["'My favorite show just ended T_T'", "'My phone battery is at 1% T_T'"] },
+            { emoticon: '(y)', definition: "The digital thumbs-up. Conveys approval without the need for actual words or detailed feedback. The epitome of efficient, low-effort validation.", expandedDefinition: "This simple affirmative is the hallmark of efficient digital communication. It means 'I agree,' 'Okay,' or 'I've seen this, and I don't need to add anything meaningful.' Often used to end a thread or signal passive compliance. The ultimate conversation killer.", synonyms: ['👍', 'OK'], origin: "Inspired by the universal gesture of approval, streamlined for speed and brevity in early chat systems.", examples: ["'Meeting at 3 PM (y)'", "'Sounds good (y)'"] },
+            { emoticon: '(n)', definition: "The digital thumbs-down. The polite way to express dissent or rejection, often used when you lack the courage to say 'no' verbally.", expandedDefinition: "The quiet harbinger of digital disapproval. This emoticon signifies disagreement or rejection without the need for conflict. It's the polite way to say 'Absolutely not,' 'I detest this idea,' or 'Your suggestion is terrible,' all while maintaining a veneer of digital civility. A coward's true friend.", synonyms: ['👎', 'Nope'], origin: "A counterpoint to '(y)', allowing for equally brief expressions of negation in digital spaces.", examples: ["'Another group project (n)'", "'Can we order pineapple pizza? (n)'"] },
+            { emoticon: '(╯°□°)╯︵ ┻━┻', definition: "The ultimate expression of digital rage. Signifies that one\'s frustration has reached a level where inanimate objects are now viable targets for kinetic dispersal.", expandedDefinition: "When words fail, and only the violent expulsion of furniture can convey your digital fury. This complex emoticon represents a complete meltdown, a declaration of war against the digital universe, or simply the exasperation of dealing with bad software. Use only in emergencies.", synonyms: ['Rage quit', 'Flipping out'], origin: "A complex Japanese emoticon (kaomoji) that gained traction globally for its dramatic representation of extreme frustration.", examples: ["'My computer just crashed AGAIN (╯°□°)╯︵ ┻━┻'", "'They changed the Wi-Fi password without telling anyone (╯°□°)╯︵ ┻━┻'"] },
+            { emoticon: '┬─┬ノ( º _ ºノ)', definition: "The counter-emoticon to the table flip. Represents the quiet, unappreciated effort of those who seek to restore order to the chaotic digital realm, one overturned table at a time.", expandedDefinition: "For every digital meltdown, there's a digital peacekeeper. This emoticon embodies the weary, often thankless, task of restoring order after a moment of extreme digital frustration. It's the silent hero, patiently righting the virtual furniture. A true digital samaritan.", synonyms: ['Restored order', 'Cleaning up'], origin: "A direct response to the table flip, representing reconciliation and the return to normalcy in online interactions.", examples: ["'Okay, calm down, let's fix this ┬─┬ノ( º _ ºノ)'", "'I've put the server back online ┬─┬ノ( º _ ºノ)'"] },
+            { emoticon: '¯\\_(ツ)_/¯', definition: "The universal shrug of resigned indifference. Implies 'I neither know nor care, and honestly, why are you even asking me?' The pinnacle of existential digital surrender.", expandedDefinition: "The digital shrug is the ultimate expression of detached apathy. It signifies that the sender is either genuinely clueless, utterly disinterested, or simply too exhausted to formulate a coherent response. It's the digital equivalent of throwing your hands up in exasperation. A true surrender to digital fate.", synonyms: ['Shrug', 'IDK', 'IDC'], origin: "A complex Japanese kaomoji (Kirby's dream land character) that became globally popular for its versatile expression of ignorance or indifference.", examples: ["'Where are my keys? ¯\\_(ツ)_/¯'", "'What's the meaning of life? ¯\\_(ツ)_/¯'"] },
+            { emoticon: '^^', definition: "A less intense, more subtly amused smile. Used when you find something cute, slightly amusing, or are trying to appear engaged without committing to full ':)' energy.", expandedDefinition: "This gentle smile conveys mild amusement or a soft acknowledgment. It's less enthusiastic than ':)' and often used for things that are cute, slightly awkward, or when you want to show you're listening without a grand emotional display. The shy smile of the digital realm.", synonyms: ['^_^', '^^;'], origin: "A simpler, more understated variation of expressive faces, used for more nuanced or subtle reactions.", examples: ["'Oh, that's adorable ^^'", "'I guess that's one way to do it ^^'"] },
+            { emoticon: ':) bye', definition: "The passive-aggressive farewell. Implies that the conversation is over, whether you like it or not, and any further attempts at engagement will be met with silence or worse, a double checkmark.", expandedDefinition: "This seemingly innocuous farewell is a digital iron curtain. It's deployed when the sender is done, finished, over it. Any further attempts at communication will be met with the digital equivalent of a locked door and the sound of crickets. A polite yet firm dismissal. Do not engage.", synonyms: ['Gotta go', 'Later'], origin: "Emerged from the need to gracefully exit awkward or prolonged digital conversations without resorting to abruptness.", examples: ["'Alright, I'm out :) bye'", "'That's all for me :) bye'"] },
+            { emoticon: 'o/\\o', definition: "A high-five. For when digital interaction is so impactful that it necessitates a virtual slap of celebratory hands. Usually followed by awkward silence.", expandedDefinition: "The digital high-five. This emoticon signifies mutual digital victory, agreement, or shared excitement. It's the virtual slap of hands that echoes through the silent ether, often followed by an unspoken question of '...now what?' A brief moment of digital camaraderie.", synonyms: ['High-five!', 'Awesome!'], origin: "A simplified representation of two hands meeting, for quick and energetic agreement in text.", examples: ["'We finally fixed the bug! o/\\o'", "'That was a great idea o/\\o'"] },
+            { emoticon: '<3', definition: "A heart. Used to express affection, appreciation, or simply to soften an otherwise blunt statement. Its true meaning varies wildly depending on sender and recipient, often leading to confusion.", expandedDefinition: "The universal digital symbol of affection, rendered in minimalist ASCII. Its actual meaning is a complex algorithm of sender intent, recipient relationship, and recent digital history. Can mean 'I love you,' 'Thanks,' or 'I'm trying to soften this critical feedback.' A digital minefield of misinterpretation.", synonyms: ['Love', 'Heart'], origin: "A simplified heart shape, allowing for the expression of warmth and affection using basic keyboard characters.", examples: ["'Thanks for the help <3'", "'You're the best <3'"] },
+            { emoticon: 'x_x', definition: "The 'dead' emoticon. For when you\'re overwhelmed, exhausted, or have just witnessed something so cringeworthy that your digital soul has departed your ASCII body.", expandedDefinition: "The digital death mask. This emoticon signifies complete exhaustion, mental incapacitation, or the feeling of one's digital soul leaving their body due to extreme boredom or cringe-inducing content. Do not attempt to revive; coffee may be required.", synonyms: ['Dead', 'Exhausted', 'Overwhelmed'], origin: "A visual representation of 'X' for eyes (indicating unconsciousness or death), quickly adopted for conveying extreme fatigue.", examples: ["'Just finished a 12-hour coding session x_x'", "'I saw that fashion choice x_x'"] },
+            { emoticon: '-_-', definition: "The squinty, exasperated stare. Often used when one\'s patience has worn thin, or when attempting to convey extreme skepticism without resorting to overt aggression.", expandedDefinition: "This narrowed gaze conveys a potent mix of digital annoyance, skepticism, and quiet judgment. It's the emoticon for when you're deeply unimpressed, or your patience is hanging by a digital thread. Implies a silent 'Are you serious?' or 'I cannot believe what I am reading.'", synonyms: ['Side-eye', 'Annoyed'], origin: "A minimalist face suggesting narrowed eyes, used to express subtle disapproval or weariness.", examples: ["'You want me to work on Saturday? -_-'", "'Did you really just say that? -_-'"] },
+            { emoticon: ';-;', definition: "Crying with a tear. A more specific form of 'T_T', for when the digital sadness is particular and poignant, perhaps relating to a lost meme or a forgotten password.", expandedDefinition: "A single, digital tear rolling down a sad face. This emoticon conveys a nuanced sadness, perhaps a moment of genuine digital pathos or a profound disappointment. It's for when the pain is real, even if the tears are just punctuation. More poignant than a full 'T_T'.", synonyms: ['T_T', ':\'-('], origin: "A slight variation of the crying emoticon, adding a tear to specify emotional impact.", examples: ["'My favorite website is down ;-;'", "'I lost all my game progress ;-;'"] },
+            { emoticon: ':-O', definition: "A more emphatic version of ':O'. For situations requiring maximal digital astonishment, usually when confronted with a truly unbelievable cat video or a surprisingly low bill.", expandedDefinition: "This wide-mouthed, wide-eyed emoticon indicates a higher degree of digital shock and awe. It's for moments when you are truly flabbergasted, astounded, or have just witnessed something that defies the laws of digital physics. Prepare for digital sensory overload.", synonyms: ['=O', 'OMG'], origin: "An extension of the simple shocked face, allowing for more intense expression of surprise.", examples: ["'You won the lottery?! :-O'", "'That presentation was actually good :-O'"] },
+            { emoticon: ':-X', definition: "Mouth sealed shut. Used when you\'ve just been sworn to digital secrecy, or you\'re holding back a truly terrible pun. Sometimes it means 'I\'m digitally kissing you', which is equally awkward.", expandedDefinition: "This emoticon signifies sealed lips, a digital vow of silence. It can mean 'I can't tell you,' 'My lips are sealed,' or 'I'm desperately trying not to say something utterly inappropriate.' The 'kissing' interpretation is a secondary, often accidental, awkward meaning. Tread carefully.", synonyms: ['🤐', 'Mum\'s the word'], origin: "A visual representation of lips being sealed (like a kiss or a zipper), used to convey secrecy or silence.", examples: ["'Don't tell anyone, okay? :-X'", "'I know what's in the box, but I can't say :-X'"] },
+            { emoticon: ':S', definition: "Confusion or mild embarrassment. The digital equivalent of a hesitant shrug, often deployed after a minor social blunder or a failed attempt at sarcasm.", expandedDefinition: "This squiggly mouth indicates digital uncertainty, mild discomfort, or a moment of slight embarrassment. It's the emoticon for when you're not quite sure what to make of something, or you've just made a tiny digital blunder. The sound it makes is a quiet 'ummm...' accompanied by a nervous digital shuffle.", synonyms: [':-S', ':/'], origin: "A face with a hesitant or uncertain mouth, expressing mild confusion or awkwardness.", examples: ["'Did I send that to the right person? :S'", "'That joke didn't land :S'"] },
+            { emoticon: '8-)', definition: "Cool, wearing sunglasses. The epitome of effortless digital cool, often used after making a clever retort or successfully debugging a line of code.", expandedDefinition: "The ultimate digital cool kid. This emoticon, sporting virtual shades, is deployed after a particularly clever comeback, a triumphant technical achievement, or simply when you're feeling exceptionally smug online. It says, 'I'm effortlessly awesome, and you can't see my eyes because of my digital coolness.'", synonyms: ['😎', 'Smooth'], origin: "Inspired by the 'deal with it' meme, but simplified for quick text use to denote a relaxed confidence.", examples: ["'Just fixed the whole system. 8-)'", "'That comeback was fire. 8-)'"] },
+            { emoticon: ':-@', definition: "Screaming. For when words fail, and only a raw, digital howl can convey the depths of your frustration or delight. Not to be confused with a social media handle.", expandedDefinition: "The digital primal scream. This emoticon expresses an overwhelming surge of emotion, whether it's unadulterated frustration, sheer terror, or explosive delight. It's the sound of a digital soul pushing its limits. Often used when caps lock simply isn't enough.", synonyms: ['Aaaah!', 'Rage!'], origin: "A face with an open mouth, simplified to convey a loud exclamation or scream.", examples: ["'My internet went down AGAIN :-@'", "'They announced a new season! :-@'"] },
+            { emoticon: '}:-)', definition: "Devilish grin. Implies mischievous intent, a secret plan, or that you\'ve just found a loophole in the system. Use with caution, as karma is digital too.", expandedDefinition: "This horned grin signals mischievous intent. It's the emoticon of a digital imp, a sly conspirator, or someone who's just discovered a clever (and potentially illicit) workaround. Use wisely, as the digital universe has a way of balancing the scales. The embodiment of playful malice.", synonyms: ['😈', 'Naughty'], origin: "A variant of a smiling face with an added '}' for a devil's horn, representing mischief or naughtiness.", examples: ["'I found a way to bypass the paywall }:-)'", "'Let's 'accidentally' send that email to everyone }:-)'"] },
+            { emoticon: ':-[', definition: "Vampire. Or, more commonly, someone feeling a bit sheepish or embarrassed. The fangs are optional, but the awkwardness is guaranteed.", expandedDefinition: "This emoticon has a dual nature. It can be a playful 'vampire' face, or more often, a subtle indication of sheepishness or mild embarrassment. The square bracket creates a slight grimace, suggesting discomfort. The fangs, if perceived, are purely coincidental to the digital awkwardness.", synonyms: ['Sheepish', 'Awkward'], origin: "The bracket represents a subtle grimace or a 'tight' mouth, often used to express a slight discomfort.", examples: ["'I just tripped in front of everyone :-['", "'Did I just say that out loud :-['"] },
+            { emoticon: ':|', definition: "A neutral face. The ultimate 'I have no opinion on this matter, nor do I wish to acquire one' expression. Perfect for group chat polls you don\'t care about.", expandedDefinition: "The embodiment of digital ambivalence. This emoticon says, 'I've seen your message, I acknowledge its existence, and I am entirely unconcerned with its content.' Ideal for situations where expressing any strong emotion would be too much effort, or for politely abstaining from digital conflict. The digital Switzerland.", synonyms: ['�', 'Meh'], origin: "A simple, straight-line mouth, indicating a lack of strong emotion or a neutral stance.", examples: ["'What do you want for dinner? :|'", "'Another mandatory team-building exercise :|'"] },
+            { emoticon: '=(', definition: "Super sad. For when just regular sad ':( ' doesn\'t quite cut it, and you need to dial up the digital despair to eleven.", expandedDefinition: "When simple sadness won't suffice, this emoticon brings the heavy artillery of digital despair. The squared bracket amplifies the frown, conveying a profound sense of disappointment, sorrow, or general digital malaise. Use sparingly, as excessive deployment may lead to digital intervention.", synonyms: ['T_T', ';('], origin: "An intensified version of the basic sad face, designed to convey a stronger sense of unhappiness.", examples: ["'My favorite character died =( '", "'My internet speed is 0.5 Mbps =('"] },
+            { emoticon: '>:o', definition: "Angry. The digital equivalent of a furrowed brow and a clenched fist. Often used when someone suggests a video meeting instead of an email.", expandedDefinition: "This emoticon projects digital fury. The angled bracket creates a furrowed brow, indicating intense displeasure, frustration, or outright rage. It's the non-verbal warning that you are about to explode into a torrent of furious keystrokes. Proceed with extreme caution.", synonyms: ['😡', 'Mad'], origin: "A combination of elements to create an angry facial expression, for direct conveyance of displeasure.", examples: ["'Another video call?! >:o'", "'They changed the deadline last minute >:o'"] },
+            { emoticon: ':-|', definition: "Indifference. The face of someone who has seen it all, and is thoroughly unimpressed. Perfect for responding to overly enthusiastic group chat messages.", expandedDefinition: "The stare of digital disillusionment. This emoticon expresses a profound lack of interest, a weary resignation, or the quiet disdain of someone who has witnessed too many online trends come and go. It's the digital equivalent of a blank wall. Best used when you simply cannot be bothered.", synonyms: ['😐', 'Bored'], origin: "A variation of the neutral face, implying a slightly more pronounced lack of engagement.", examples: ["'Did you see that new challenge? :-|'", "'Another motivational quote :-|'"] },
+            { emoticon: ':->', definition: "A happy, cynical smile. For when you\'re outwardly pleased, but inwardly judging everything. The ultimate 'bless your heart' emoticon.", expandedDefinition: "This emoticon masks a subtle cynicism behind a cheerful exterior. It's the digital 'bless your heart' — outwardly polite, inwardly scathing. It suggests an awareness of absurdity, a hidden agenda, or a quiet judgment of the digital proceedings. A smile with a secret.", synonyms: ['Smirk', 'Sarcastic'], origin: "A smiling face with a slightly elongated nose, implying a more pointed or knowing expression.", examples: ["'Oh, you really think that will work :->'", "'That's a very... 'unique' idea :->'"] },
+            { emoticon: '<:-P', definition: "Party hat and tongue out. Because sometimes, you just need to digitally celebrate the small victories, like finding matching socks.", expandedDefinition: "The digital party animal. This emoticon signals a moment of pure, unadulterated digital celebration, no matter how trivial the achievement. It's a spontaneous burst of joy, a tiny digital fiesta, usually for something only you find exciting. The party starts now, with or without others.", synonyms: ['Party!', 'Yay!'], origin: "A creative combination of characters to form a party hat and a playful expression, for lighthearted celebrations.", examples: ["'I finally cleared my inbox <:-P'", "'Found my lost charger <:-P'"] },
+            { emoticon: '%-)', definition: "Drunk or dizzy. For when the digital world is spinning, or you\'ve been staring at spreadsheets for too long. Consult a real doctor if symptoms persist.", expandedDefinition: "This emoticon conveys digital disorientation. It suggests the sender is either legitimately tipsy, suffering from severe screen fatigue, or just completely bewildered by complex data. The digital world is spinning, and clarity is a distant memory. May require a digital lie-down.", synonyms: ['Woozy', 'Confused'], origin: "The '%' symbol representing eyes that are swirling, indicative of dizziness or intoxication.", examples: ["'My head hurts from all these numbers %-)'", "'Did I just read that right? %-)'"] },
+            { emoticon: ':_D', definition: "Excited with sweat. The digital manifestation of nervous anticipation, usually before a big launch, or realizing you forgot to mute yourself on a call.", expandedDefinition: "This emoticon perfectly captures the essence of excited anxiety. The sweat bead indicates a nervous energy, a bubbling anticipation before a major digital event. It's the moment before the big reveal, the product launch, or the realization you've been on mute for the last 10 minutes. Digital palpitations inbound.", synonyms: ['Nervous excited', 'Anticipation'], origin: "Combines a happy face with an underscore to represent a sweating brow, for anxious excitement.", examples: ["'Product launch is tomorrow! :_D'", "'Waiting for the test results :_D'"] },
+            { emoticon: '( ͡° ͜ʖ ͡°)', definition: "The 'Lenny Face'. A complex blend of mischievousness, insinuation, and a general air of knowing something you don\'t. Use at your own risk.", expandedDefinition: "The infamous 'Lenny Face' is a digital enigma. It's a highly nuanced expression conveying anything from sly insinuation to pure, unadulterated mischief. Its unsettling gaze suggests hidden knowledge, playful teasing, or a profound understanding of internet secrets. Proceed with extreme caution; its true meaning may forever remain elusive.", synonyms: ['Lenny', 'Smug'], origin: "A Japanese emoticon (kaomoji) that gained massive popularity for its unique and ambiguous expression, adaptable to various contexts.", examples: ["'I've seen your browser history ( ͡° ͜ʖ ͡°)'", "'Just found out something interesting ( ͡° ͜ʖ ͡°)'"] },
+            { emoticon: ':-&', definition: "Tongue-tied. Or, more likely, you\'ve just tried to explain something complex digitally and realized it\'s impossible. Back to emojis, perhaps?", expandedDefinition: "This emoticon perfectly captures the frustration of digital articulation. It signifies being unable to express oneself coherently, usually after attempting to explain a complex idea through text. It's the moment you realize some things just can't be conveyed without actual human interaction. A silent surrender to communication breakdown.", synonyms: ['Speechless', 'Lost for words'], origin: "A face with a knot-like mouth, symbolizing a 'tied' tongue or inability to speak.", examples: ["'Trying to explain quantum physics in a tweet :-&'", "'My feelings are too complex to type :-&'"] },
+            { emoticon: ':-\\', definition: "Wry, confused, or unsure. The emoticon of existential digital pondering when confronted with a vague instruction or a philosophical tweet.", expandedDefinition: "This tilted mouth conveys a state of digital contemplation, confusion, or mild skepticism. It's the emoticon for when you're scratching your head, trying to make sense of vague instructions or a particularly cryptic online post. The internal monologue is usually 'What do they even mean?'", synonyms: ['Perplexed', 'Unsure'], origin: "A face with a slanted mouth, expressing a hesitant or confused state.", examples: ["'Read the instructions, still not clear :-\\ '", "'That tweet was... deep :-\\ '"] },
+            { emoticon: '=D', definition: "A bigger, toothier grin. For when regular \':D\' isn\'t quite enthusiastic enough, but you still can\'t be bothered with actual words of delight.", expandedDefinition: "An amplified version of the delighted emoticon. This wide, open-mouthed smile signifies an even higher level of digital joy or amusement. It's for when you're truly happy, but your fingers are too tired to type out elaborate expressions of glee. The ultimate low-effort, high-impact smile.", synonyms: ['xD', 'LOL'], origin: "An intensified variant of the 'D' mouth, showing more pronounced happiness.", examples: ["'That's amazing =D'", "'I can't believe it =D'"] },
+            { emoticon: ';D', definition: "A winking, happy face. 'I\'m happy and I know a secret you probably don\'t, but I\'m being nice about it.' Or just a simple wink with extra cheer.", expandedDefinition: "This emoticon combines cheerfulness with a knowing wink. It implies shared amusement, a clever secret, or an insider joke. It's a friendly conspirator's gaze, suggesting a positive outcome or a hidden understanding. The digital equivalent of a polite nudge and a smile.", synonyms: ['Happy wink', 'Knowing'], origin: "Combines the wink with a happy mouth for a cheerful conspiratorial look.", examples: ["'We got the project approved ;D'", "'That's our little secret ;D'"] },
+            { emoticon: '}:(', definition: "Pouting or sad with a horn. When sadness is combined with a touch of playful devilry, or you\'re just really annoyed you didn\'t get the last donut.", expandedDefinition: "This emoticon blends sadness with a hint of mischievous frustration. It's the pout of a digital imp, upset but also a little bit defiant. Ideal for when you're genuinely annoyed but also want to convey a playful, 'I'm still a devil, even when sad' attitude. The adorable grump.", synonyms: ['Annoyed sad', 'Pouty'], origin: "Combines a sad face with a devil's horn, for a mix of negativity and playful mischief.", examples: ["'They took the last slice of pizza }:( '", "'My game glitched at the final boss }:('"] },
+            { emoticon: ':-*', definition: "Kissing face. For when you\'re sending digital affection, or awkwardly trying to end a conversation with a virtual smooch.", expandedDefinition: "This emoticon can be a sweet digital kiss or an incredibly awkward way to terminate a conversation. Its interpretation depends entirely on context and relationship. It's the digital peck on the cheek, which can be endearing or deeply uncomfortable. Use with discretion to avoid digital misfires.", synonyms: ['Kiss', 'Affectionate'], origin: "A stylized mouth shape that resembles puckered lips for a kiss.", examples: ["'Thanks for everything :-*'", "'Goodnight :-*'"] },
+            { emoticon: '@_@', definition: "Dizzy or bewildered. The look of someone who\'s just pulled an all-nighter or tried to understand cryptocurrency. Eyes swirling with digital confusion.", expandedDefinition: "This emoticon signifies extreme digital dizziness, confusion, or mental overload. The swirling eyes indicate that the sender's brain is actively buffering or on the verge of a digital crash. Often used after a particularly long session of work, gaming, or trying to comprehend blockchain. A true indicator of digital fatigue.", synonyms: ['Confused', 'Overwhelmed'], origin: "The '@' symbol suggests spiraling eyes, conveying dizziness or bewilderment.", examples: ["'Just read that entire legal document @_@'", "'I've been awake for 36 hours @_@'"] },
+            { emoticon: '#-)', definition: "Party face. Or, more accurately, someone who\'s just woken up with a severe digital hangover. The 'I survived the group chat last night' expression.", expandedDefinition: "This emoticon playfully suggests a party hat, but more accurately, it's the face of digital exhaustion after a night of intense online activity. It's the 'I survived the group chat' expression, complete with the lingering sense of bewilderment. A testament to the enduring digital hangover.", synonyms: ['Hangover', 'Tired party'], origin: "The '#' symbol as a party hat, used for celebrating or showing aftermath of celebration.", examples: ["'After that online game marathon #-)'", "'My brain hurts from all the notifications #-)'"] },
+            { emoticon: 'd:o', definition: "A super angry face, possibly with a goatee. For when your digital rage is so intense it requires facial hair and a primal scream.", expandedDefinition: "This emoticon conveys a primal, almost monstrous digital rage. The 'd' suggesting a menacing brow or a goatee, combined with the open mouth, creates an image of pure, unadulterated fury. It's the final stage before a full digital meltdown or a strongly worded email. Beware its wrath.", synonyms: ['Raging', 'Furious'], origin: "A creative combination to represent a monstrous or extremely angry face.", examples: ["'They deleted my comments without warning d:o'", "'The printer jammed AGAIN d:o'"] },
+            { emoticon: '(*_*)', definition: "Star-struck or amazed. The digital equivalent of wide-eyed wonder at something truly impressive, like a new piece of tech or a perfectly formatted spreadsheet.", expandedDefinition: "This emoticon signifies digital amazement, pure wonder, or being utterly star-struck by something online. The asterisks suggest sparkling, wide eyes, conveying awe and admiration. It's for moments of profound digital beauty, a brilliant hack, or a perfectly executed spreadsheet. The digital 'wow' factor.", synonyms: ['Awed', 'Amazed'], origin: "Asterisks representing stars or sparkles around the eyes, for conveying strong positive emotional impact.", examples: ["'That new software is amazing (*_*)'", "'Look at that data visualization (*_*)'"] },
+            { emoticon: '^o^', definition: "Joyful and energetic. For when you\'re bouncing off the digital walls with excitement, usually over something trivial like a new sticker pack.", expandedDefinition: "This emoticon radiates pure, uncontained digital joy and boundless energy. The upward-pointing carets and open mouth suggest enthusiastic cheering or bouncing with excitement. It's for moments of unadulterated digital glee, no matter how small the cause. The digital cheerleader.", synonyms: ['Jubilant', 'Excited'], origin: "Carets representing raised hands or joyful eyebrows, combined with an open mouth for enthusiastic expression.", examples: ["'New emojis just dropped ^o^'", "'I finished my chores early ^o^'"] },
+            { emoticon: '$_$', definition: "Money eyes. The universal sign of pure avarice or extreme excitement over a financial prospect, like finding a forgotten gift card.", expandedDefinition: "The quintessential emoticon for digital avarice. This expression leaves no doubt about the sender's primary motivation: money. The dollar signs replacing the eyes convey a laser-like focus on financial gain, whether it's a forgotten gift card, a bonus, or a tempting online sale. Pure digital greed, unashamed.", synonyms: ['Greedy', 'Cash money'], origin: "Dollar signs replacing eyes, for a direct visual representation of financial interest.", examples: ["'That stock is going to the moon $_$'", "'I found a $20 bill in my old coat $_$'"] },
+            { emoticon: '&_&', definition: "Exhausted. The digital expression of complete and utter burnout. 'I\'m so tired my eyes have become abstract symbols.'", expandedDefinition: "This emoticon conveys profound digital exhaustion. The abstract symbols for eyes indicate that the sender's visual processing unit has ceased to function. It's the face of someone who has pulled too many all-nighters or consumed too much digital content. Approach with caffeine.", synonyms: ['Burnt out', 'Fatigued'], origin: "Abstract symbols used to represent eyes that are 'crossed' or tired.", examples: ["'Another all-nighter for work &_&'", "'My brain is fried from this game &_&'"] },
+            { emoticon: '(-_-)', definition: "Sleeping or profoundly bored. The ultimate digital snore, indicating complete disengagement from the current conversation or topic.", expandedDefinition: "The ultimate digital snore. This emoticon signifies either genuine sleep, profound boredom, or a deliberate mental disengagement from the ongoing digital conversation. It's the polite way to say 'I'm not listening anymore, and I might be drooling on my keyboard.' Do not disturb.", synonyms: ['Asleep', 'Bored'], origin: "A closed-eye face, often with a horizontal dash, for peaceful or tired sleep.", examples: ["'Lectures on Zoom be like (-_-)'", "'This meeting is going nowhere (-_-)'"] },
+            { emoticon: '>:-)', definition: "Evil grin. For when you\'ve just pulled off a harmless prank or are contemplating a truly diabolical plan. Best used with caution.", expandedDefinition: "This emoticon exudes a subtly sinister charm. It's the evil twin of the normal smile, signaling a mischievous plot, a clever trick, or a slightly malevolent plan. Use responsibly, as repeated deployment may lead to accusations of digital villainy. The digital supervillain in training.", synonyms: ['Devilish', 'Malicious'], origin: "An angry mouth combined with a smile, creating a devilish or sly expression.", examples: ["'I swapped their sugar with salt >:-)'", "'My plan is almost complete >:-)'"] },
+            { emoticon: '_-_', definition: "A slightly different variation of sleeping/bored. 'My eyelids are so heavy, they\'ve merged with my eyebrows. Don\'t bother me.'", expandedDefinition: "A more emphasized version of digital sleepiness or disinterest. The extended underscore emphasizes the heaviness of the digital eyelids, indicating a deeper level of fatigue or a more profound state of mental checking out. Resistance is futile.", synonyms: ['Zzz', 'Deep sleep'], origin: "A variation of the tired face, stressing the closed eyes.", examples: ["'Just woke up from a work dream _-_'", "'My brain after a day of spreadsheets _-_'"] },
+            { emoticon: '~_~', definition: "Sleepy or very tired. 'My brain is actively trying to shut down, please provide caffeine or an immediate nap.'", expandedDefinition: "This emoticon indicates extreme digital sleepiness or fatigue. The wavy lines suggest eyes struggling to stay open, a brain actively attempting to initiate a digital shutdown. A desperate plea for caffeine, a nap, or the end of the current digital ordeal. Proceed with energy drinks.", synonyms: ['Drowsy', 'Exhausted'], origin: "Wavy lines representing tired, drooping eyes.", examples: ["'I need more coffee ~_~'", "'Only 2 hours of sleep last night ~_~'"] },
+            { emoticon: 'X_X', definition: "Completely knocked out or overwhelmed. 'My digital existence has been terminated due to excessive data input or emotional overload.'", expandedDefinition: "The absolute final stage of digital incapacitation. This emoticon signifies a complete system failure, a total shutdown due to overwhelming data, emotional overload, or pure exhaustion. The 'X's for eyes mean the digital lights are out. Do not attempt CPR; a full reboot is required.", synonyms: ['KO', 'Brain dead'], origin: "A more intense version of 'x_x', indicating complete unconsciousness or system crash.", examples: ["'Just finished a triple-header meeting X_X'", "'My brain trying to understand this code X_X'"] },
+            { emoticon: '-_-;', definition: "Annoyed, with a bead of sweat. For when something is irritating you just enough to cause minor digital perspiration.", expandedDefinition: "This emoticon captures the subtle simmer of digital annoyance. The sweat bead indicates a building frustration, a slight irritation that hasn't yet erupted into full rage. It's the digital sigh of exasperation when dealing with minor, yet persistent, inconveniences. Patience is wearing thin.", synonyms: ['Irritated', 'Frustrated'], origin: "Combines the annoyed face with a semicolon for a sweat drop, showing subtle irritation.", examples: ["'Another pop-up ad -_-;'", "'My mouse just stopped working -_-;'"] },
+            { emoticon: '_o/', definition: "A simple wave. 'Hello,' 'Goodbye,' or 'I acknowledge your presence from a safe digital distance.'", expandedDefinition: "The universal digital wave. This emoticon is a minimalist greeting, farewell, or acknowledgment. It implies a polite, distant interaction, suitable for quick check-ins or signaling your presence without committing to a full conversation. The digital 'howdy' or 'see ya'.", synonyms: ['Wave', 'Hi', 'Bye'], origin: "A simple hand raised for a wave, for quick salutations.", examples: ["'Hey there _o/'", "'I'm heading out _o/'"] },
+            { emoticon: 'm(_ _)m', definition: "Bowing in apology or respect. For when you\'ve made a truly egregious digital error and need to prostrate yourself virtually.", expandedDefinition: "This emoticon represents a deep bow, signifying profound apology, humility, or reverence in the digital space. It's for when you've made a truly egregious digital blunder and need to convey maximum remorse. Also used for expressing extreme gratitude. The ultimate digital prostration.", synonyms: ['Apology', 'Respect'], origin: "A Japanese emoticon (kaomoji) representing a deep bow of respect or apology.", examples: ["'I am so sorry for that error m(_ _)m'", "'Thank you for your patience m(_ _)m'"] },
+            { emoticon: 'C: ', definition: "A happy, wide-mouthed smile, reminiscent of an old arcade character. For when you\'re feeling a retro kind of joy.", expandedDefinition: "This emoticon evokes the cheerful, simplistic glee of classic arcade characters. Its wide, open mouth conveys a straightforward, uncomplicated happiness, often with a hint of nostalgic charm. It's for when your digital joy is pure, unadulterated, and perhaps a bit pixelated.", synonyms: ['Retro happy', 'Big smile'], origin: "A simple, wide-open mouth, resembling a cheerful character from early video games.", examples: ["'Got a high score C: '", "'Finished the level C: '"] },
+            { emoticon: '[]_[]', definition: "Box face or robot. Used when feeling stiff, emotionless, or just delivering a very factual statement with no room for human error.", expandedDefinition: "This emoticon represents a rigid, emotionless, almost robotic demeanor. It's deployed when the sender wishes to convey pure objectivity, a lack of personal feeling, or a state of strict adherence to logic. Ideal for delivering cold, hard facts or for impersonating a digital automaton. Embrace the binary.", synonyms: ['Robot', 'Expressionless'], origin: "Square brackets for a rigid head, implying a robotic or emotionless state.", examples: ["'The data indicates a 10% decrease []_[]'", "'Processing request []_[]'"] },
+            { emoticon: 'd-_-b', definition: "Listening to music with headphones. Or, 'I\'m vibing and not listening to your nonsense.'", expandedDefinition: "This emoticon represents a state of blissful digital immersion, typically in music. The 'd' and 'b' act as headphones, while the face conveys a serene, almost meditative state. It also serves as a polite (or not-so-polite) way to indicate you're currently tuned out to external digital noise. Do not interrupt the vibe.", synonyms: ['Vibing', 'Headphones'], origin: "A creative use of 'd' and 'b' to represent headphones around a face, indicating music listening.", examples: ["'Working with my tunes on d-_-b'", "'Ignoring the drama d-_-b'"] },
+            { emoticon: '>:-D', definition: "A very evil, very happy grin. When your devious plan has succeeded beyond your wildest digital dreams.", expandedDefinition: "This emoticon is the embodiment of triumphant, malevolent glee. The wide grin combined with the 'devilish' elements signifies that a cunning plan has not only succeeded but has done so spectacularly. It's the sound of a digital supervillain cackling with unholy delight. Fear its unbridled joy.", synonyms: ['Maniacal', 'Evil triumph'], origin: "An intensified version of the devilish grin, showing extreme, mischievous happiness.", examples: ["'My coding prank worked perfectly >:-D'", "'I won the argument with irrefutable facts >:-D'"] },
+            { emoticon: '(* *)', definition: "Dazed or surprised. Your digital eyes are wide, processing an unexpected turn of events online.", expandedDefinition: "This emoticon conveys a state of mild digital shock or dazed surprise. The spaces in the eyes suggest a blank stare, a momentary pause as the digital brain processes unexpected information. It's for when you're surprised but not quite flabbergasted. A quiet 'huh?'", synonyms: ['Dumbfounded', 'Blank stare'], origin: "Simple parentheses for wide, open eyes, conveying surprise or a dazed look.", examples: ["'They actually did that (* *)'", "'The update changed everything (* *)'"] },
+            { emoticon: ':>D', definition: "An evil, maniacal laugh. When your digital scheme has worked perfectly, and you can\'t contain your malevolent joy.", expandedDefinition: "The sound of pure, unadulterated digital villainy. This emoticon represents a cackling, triumphant laugh after a mischievous plan has come to fruition. It's the digital equivalent of twirling a mustache while watching your scheme unfold. Warning: May attract digital superheroes.", synonyms: ['Mwahaha', 'Scheming'], origin: "An exaggerated, open mouth for a laugh, combined with the 'evil' angled eyes.", examples: ["'My fake bug report totally fooled them :>D'", "'I subtly shifted all the blame :>D'"] },
+            { emoticon: ':<=', definition: "Small sad face. For when you\'re just a little bit disappointed but maintaining digital composure.", expandedDefinition: "A subtle, understated expression of digital disappointment. The smallness of the face indicates that the sadness is minor, easily contained, and not worth a full emotional display. It's for when things don't go perfectly, but you're too polite to make a fuss. A gentle digital sigh.", synonyms: ['Mildly sad', 'Disappointed'], origin: "A simple left-facing, small sad face.", examples: ["'The coffee shop is closed :<='", "'My internet speed is slow :<='"] },
+            { emoticon: "( ^_^)/", definition: "Cheering, raising hands. An enthusiastic digital cheer for a job well done or a new meme.", expandedDefinition: "This emoticon bursts with positive digital energy! It represents enthusiastic cheering, celebrating a victory, or simply expressing unbridled joy. The raised arms indicate a full commitment to digital excitement. A true champion of digital positive vibes.", synonyms: ['Yay!', 'Hooray!'], origin: "A more complex kaomoji representing a person raising their hands in celebration.", examples: ["'We finished the project early ( ^_^)/'", "'That's amazing news! ( ^_^)/'"] },
+            { emoticon: "(=.=)", definition: "Sleepy or bored. Your digital eyelids are heavy, drifting off into the land of cached data.", expandedDefinition: "This emoticon conveys extreme digital drowsiness or boredom. The closed, slightly saggy eyes indicate that the sender is on the verge of falling asleep or has mentally checked out entirely. The digital brain is buffering, preparing for a long, well-deserved nap. Do not disturb.", synonyms: ['Zzz', 'Fatigued'], origin: "A tired face with closed eyes, expressing boredom or sleepiness.", examples: ["'This webinar is so long (=.=)'", "'My eyes are closing after reading that article (=.=)'"] },
+            { emoticon: "o(>_<)o", definition: "Shocked or hurt. The digital wince, indicating emotional pain or a papercut from a printer.", expandedDefinition: "This emoticon expresses a sudden digital wince, indicating shock, mild pain, or discomfort. It's the face you make when you accidentally delete a file, hear a terrible pun, or get a digital papercut. A small, but significant, moment of digital distress.", synonyms: ['Ouch!', 'Surprised'], origin: "A face recoiling in pain or surprise, with eyes closed tightly.", examples: ["'I just stubbed my toe o(>_<)o'", "'That news hit hard o(>_<)o'"] },
+            { emoticon: "(-_-;)y", definition: "Smoking and tired. 'I\'ve seen too much digital chaos today, and I need a break.'", expandedDefinition: "This emoticon combines weariness with a hint of world-weariness. The 'y' representing a cigarette suggests a need for a break, a moment of digital contemplation after enduring too much online chaos. 'I'm tired, and I need a moment to process the absurdity.'", synonyms: ['Burnt out', 'Need a break'], origin: "A tired face combined with a 'y' to symbolize a cigarette or a moment of reflection.", examples: ["'Just finished a long meeting (-_-;)y'", "'The internet is a wild place today (-_-;)y'"] },
+            { emoticon: "X(X_X)X", definition: "Super dead. Beyond dead. Your digital life force has completely evaporated.", expandedDefinition: "This is the ultimate digital fatality. When 'X_X' isn't enough, 'X(X_X)X' signifies complete and utter digital obliteration. Your digital consciousness has not only departed but has been disintegrated. No reboot will save you now. You are digitally no more.", synonyms: ['Deceased', 'Annihilated'], origin: "An exaggerated version of the 'dead' emoticon, emphasizing extreme incapacitation.", examples: ["'After 7 rounds of that game X(X_X)X'", "'My brain trying to understand tax forms X(X_X)X'"] },
+            { emoticon: "[_]", definition: "A box, or a very plain, unexpressive face. For when you have absolutely no digital opinion.", expandedDefinition: "This emoticon represents a complete lack of digital expression. It's the blank canvas of emotions, signifying absolute neutrality, indifference, or a deliberate refusal to offer an opinion. It says, 'My digital face is a box, and it holds no judgments.'", synonyms: ['Blank', 'Neutral'], origin: "A simple box, representing a featureless or expressionless face.", examples: ["'What are your thoughts on this? [_]'", "'I have no comment [_] '"] },
+            { emoticon: "|-(", definition: "Crying with a flat mouth. When sadness is present, but enthusiasm for expression is not.", expandedDefinition: "This emoticon conveys sadness that is heavy and resigned. The flat mouth indicates a lack of energy for a full frow, suggesting a quiet, internal despair. It's for when you're sad, but also too tired or emotionally drained to show it outwardly. A weary, digital weep.", synonyms: ['Resigned sad', 'Quiet sorrow'], origin: "A vertical line for an eye (tear) and a flat mouth, indicating subdued sadness.", examples: ["'Another Monday |-( '", "'The forecast is rain all week |-( '"] },
+            { emoticon: "=)", definition: "Simple happy face. A straightforward, no-fuss digital smile.", expandedDefinition: "The most basic and efficient digital smile. It conveys simple happiness, agreement, or general contentment without any unnecessary frills. It's the digital equivalent of a polite, pleasant nod. Reliable and universally understood.", synonyms: [':)', '(:'], origin: "A simplified smiley face, designed for quick and easy expression of positivity.", examples: ["'Sounds good =)'", "'Glad to hear that =)'"] },
+            { emoticon: "O.o", definition: "Mild surprise, one eye raised. When something online is mildly intriguing but not outright shocking.", expandedDefinition: "This emoticon conveys a subtle digital double-take. One eye is open, the other slightly wider or off-kilter, indicating mild surprise, intrigue, or a hint of 'What was that?' It's for when you're trying to figure out if you just saw what you thought you saw. The digital head tilt.", synonyms: ['Perplexed', 'Curious'], origin: "A slight variation of the surprised face, with one eye subtly different to show nuanced reaction.", examples: ["'Did I just see that? O.o'", "'That's an interesting approach O.o'"] },
+            { emoticon: "<3", definition: "Heart. Simple digital affection, without the complications of real emotions.", expandedDefinition: "The most direct digital expression of love or strong affection. It's concise, unambiguous, and widely understood. Use it to convey warmth, appreciation, or simply to soften any digital communication. The digital hug.", synonyms: ['Love', 'Heart'], origin: "A direct ASCII representation of a heart shape.", examples: ["'You're the best <3'", "'Sending good vibes <3'"] },
+            { emoticon: ":O", definition: "Open mouth. Simple shock or surprise, less intense than a full gasp.", expandedDefinition: "A basic digital expression of surprise or mild shock. The open mouth indicates astonishment without the dramatic wide eyes of ':-O'. It's for when you're surprised, but still have your digital wits about you. A simple 'Oh!'", synonyms: ['Surprised', 'Gasp'], origin: "A straightforward representation of an open mouth for surprise.", examples: ["'They actually did it :O'", "'That's unexpected :O'"] },
+            { emoticon: "T_T", definition: "Crying. For digital despair or dramatic overreaction to minor inconveniences.", expandedDefinition: "The classic digital crying face. It signifies sadness, frustration, or a dramatic overreaction to something minor. The 'T' represents eyes streaming tears, while the underscore is a flat, despairing mouth. Use for emotional exaggeration or genuine digital woe.", synonyms: ['Crying', 'Sad'], origin: "A minimalist face with tears streaming down, for simple and quick expression of sadness.", examples: ["'My game save got corrupted T_T'", "'I missed the online sale T_T'"] },
+            { emoticon: ":\'(", definition: "Crying. A more nuanced digital tear, implying a touch of emotional distress.", expandedDefinition: "This emoticon adds a single, poignant tear to the frow, indicating a touch of genuine sadness or emotional distress. It's less dramatic than 'T_T' but more heartfelt than a simple ':('. A quiet moment of digital sorrow.", synonyms: ['Sad tear', 'Distressed'], origin: "An apostrophe used as a single tear on a sad face, for a subtle emotional impact.", examples: ["'That story was really moving :\'('", "'I messed up that assignment :\'('"] },
+            { emoticon: "=D", definition: "Big, happy smile. For maximum digital enthusiasm.", expandedDefinition: "A larger, more enthusiastic version of the happy face. The wide 'D' mouth conveys unbridled joy and excitement. It's for when you're truly thrilled and want to express it with maximum digital impact. A radiant digital grin.", synonyms: ['Super happy', 'Excited'], origin: "An exaggerated 'D' mouth for a very large, happy smile.", examples: ["'That's the best news ever =D'", "'I can't wait for this =D'"] },
+            { emoticon: ":P", definition: "Tongue out. Playful, cheeky, or just a digital raspberry.", expandedDefinition: "A classic digital gesture of playfulness. The sticking-out tongue conveys teasing, cheekiness, or a lighthearted challenge. It's a digital raspberry, often used to lighten the mood or add a mischievous touch to a comment. The digital mischief-maker.", synonyms: ['Playful', 'Teasing'], origin: "A simple face with a tongue sticking out.", examples: ["'Caught you! :P'", "'You can't catch me :P'"] },
+            { emoticon: ";)", definition: "Wink. The classic digital signal for a joke or sarcasm.", expandedDefinition: "The quintessential digital wink. It implies shared understanding, a hidden joke, or a sarcastic undertone. Use it to convey a secret, a tease, or a knowing look. The digital secret-keeper.", synonyms: ['Wink', 'Sarcastic'], origin: "A semicolon for a winking eye, a widely recognized symbol.", examples: ["'That was 'amazing' work ;)'", "'You know what I mean, right? ;)'"] },
+            { emoticon: ":X", definition: "Mouth zipped shut. Digital vow of silence.", expandedDefinition: "This emoticon signifies an unbreakable digital vow of silence. The 'X' over the mouth indicates that no information will be shared, lips are sealed, and the conversation is officially closed on that topic. The ultimate digital secret.", synonyms: ['Secret', 'Quiet'], origin: "An 'X' representing a mouth that is zipped or sealed shut.", examples: ["'I'm not saying another word :X'", "'Top secret information :X'"] },
+            { emoticon: "8)", definition: "Wearing glasses, simple smile. Intelligent or just observing online.", expandedDefinition: "This emoticon features a simple smile behind a pair of digital eyeglasses. It conveys an air of intelligence, thoughtfulness, or simply a user who is observing the online world with a keen eye. The digital intellectual, always learning.", synonyms: ['Smart', 'Observant'], origin: "A simple '8' for glasses on a face.", examples: ["'That's a very insightful comment 8)'", "'I'm just watching the comments 8)'"] },
+            { emoticon: ":S", definition: "Confused or perplexed. Your digital circuits are overloaded.", expandedDefinition: "This emoticon conveys a state of digital confusion or being utterly perplexed. The 'S' shaped mouth suggests a twist of uncertainty, as if the digital brain is buffering trying to process. It's for when you're trying to make sense of information that just doesn't compute. Digital bewilderment in its purest form.", synonyms: ['Puzzled', 'Uncertain'], origin: "A wavy 'S' shape for a confused mouth.", examples: ["'I don't understand these instructions :S'", "'What exactly are we doing here? :S'"] },
+            { emoticon: ":#", definition: "Mouth covered. Digital discretion or holding back a strong opinion.", expandedDefinition: "This emoticon signifies a digital act of discretion. The hash symbol over the mouth indicates that the sender is holding back an opinion, exercising digital restraint, or simply choosing not to comment. It's for when you have thoughts, but perhaps they're better left unsaid. The digital filter.", synonyms: ['Restrained', 'Discreet'], origin: "The '#' symbol representing a covered mouth, for discreet communication.", examples: ["'My thoughts on that are... :#'", "'I'll keep my opinion to myself :#'"] },
+            { emoticon: ":!", definition: "Exclamation point face. Digital surprise or alarm.", expandedDefinition: "This emoticon expresses a sharp digital gasp of surprise or alarm. The exclamation mark for a mouth signifies a sudden intake of breath, conveying a quick, startled reaction to an unexpected event or piece of news online. A digital jolt.", synonyms: ['Startled', 'Gasp!'], origin: "An exclamation mark used to denote surprise or excitement.", examples: ["'That was a close call :!'", "'I just saw the news :!'"] },
+            { emoticon: ":$", definition: "Money eyes. Pure digital greed or excitement over virtual currency.", expandedDefinition: "The quintessential emoticon for digital avarice. This expression leaves no doubt about the sender's primary motivation: money. The dollar signs replacing the eyes convey a laser-like focus on financial gain, whether it's a forgotten gift card, a bonus, or a tempting online sale. Undisguised digital capitalism.", synonyms: ['Greedy', 'Cash money'], origin: "Dollar sign representing eyes, for financial interest.", examples: ["'Look at those profits :$'", "'I found a $20 bill in my old coat :$'"] },
+            { emoticon: "O:)", definition: "Angel. Feeling digitally angelic or trying to appear so.", expandedDefinition: "This emoticon portrays an angelic halo, indicating digital innocence, purity, or a playful attempt to appear virtuous. It's for when you're feeling exceptionally good, or trying to deflect blame by radiating digital holiness. The digital cherub.", synonyms: ['Innocent', 'Pure'], origin: "An 'O' for a halo above a face, for an angelic expression.", examples: ["'Who, me? O:)'", "'I'd never do anything wrong O:)'"] },
+            { emoticon: ">:-(", definition: "Very angry frown. Your digital rage is reaching its boiling point.", expandedDefinition: "This emoticon escalates anger to a critical level. The furrowed brow and frown convey intense frustration, almost boiling over. It's for when you're genuinely furious and want to make sure your digital recipient feels the heat. Digital red alert.", synonyms: ['Furious', 'Enraged'], origin: "An intensified version of the angry face, showing extreme displeasure.", examples: ["'They did WHAT?! >:-(", "'This is unacceptable >:-('"] },
+            { emoticon: "[]D", definition: "Drinking mug. A digital coffee break or celebratory drink.", expandedDefinition: "This emoticon represents a refreshing digital beverage. The square bracket and 'D' suggest a mug, indicating a coffee break, a celebratory drink, or simply a moment of digital relaxation. 'Cheers!' to the online world.", synonyms: ['Coffee break', 'Cheers!'], origin: "A simplified mug shape for drinking.", examples: ["'Time for my digital coffee break []D'", "'To a successful launch []D'"] },
+            { emoticon: ":-T", definition: "Cross. Digital annoyance and disapproval.", expandedDefinition: "This emoticon conveys a passive-aggressive digital 'Tsk, tsk.' The 'T' as a cross for the mouth suggests disapproval or a subtle scolding. It's for when you're annoyed but too polite (or lazy) for outright confrontation. The digital head shake.", synonyms: ['Disapproving', 'Annoyed'], origin: "A 'T' for a closed, disapproving mouth.", examples: ["'That's not how you do it :-T'", "'I expected more :-T'"] },
+            { emoticon: "=O", definition: "Huge shock. Your digital jaw has dropped to the floor.", expandedDefinition: "This emoticon represents a state of extreme digital astonishment. The wide open mouth combined with the equals sign for wide eyes conveys a jaw-dropping level of shock. It's for when something is so unbelievable, your digital face has physically contorted. Prepare for digital recovery.", synonyms: ['Flabbergasted', 'Astounded'], origin: "An intensified version of the shocked face, for profound surprise.", examples: ["'You won two lotteries?! =O'", "'They actually released that feature =O'"] },
+            { emoticon: ":Q", definition: "Smoking. Digital cool, or a strong desire for a real-world cigarette break.", expandedDefinition: "This emoticon adds a touch of digital swagger or a clear signal for a break. The 'Q' with its tail suggests a cigarette, implying a cool, nonchalant attitude, or simply the need to step away from the screen for a moment of digital contemplation. The digital rebel.", synonyms: ['Cool', 'Smoke break'], origin: "A 'Q' used to symbolize someone smoking or taking a break.", examples: ["'Just finished a tough call :Q'", "'Feeling good about that :Q'"] },
+            { emoticon: "|-O", definition: "Yawning. This digital meeting is incredibly dull.", expandedDefinition: "This emoticon signals extreme digital boredom or drowsiness. The closed eyes and open mouth clearly indicate a yawn, suggesting that the current online activity is utterly unengaging. It's the digital way to say 'Wake me up when something interesting happens.'", synonyms: ['Bored', 'Sleepy'], origin: "A face with closed eyes and an open mouth for yawning.", examples: ["'Another long meeting |-O'", "'I can't stay awake for this |-O'"] },
+            { emoticon: ":-&", definition: "Tongue-tied. Digital words fail you.", expandedDefinition: "This emoticon perfectly captures the frustration of digital articulation. It signifies being unable to express oneself coherently, usually after attempting to explain a complex idea through text. It's the moment you realize some things just can't be conveyed without actual human interaction. A silent surrender to communication breakdown.", synonyms: ['Speechless', 'Lost for words'], origin: "A face with a knot-like mouth, symbolizing a 'tied' tongue or inability to speak.", examples: ["'Trying to explain quantum physics in a tweet :-&'", "'My feelings are too complex to type :-&'"] },
+            { emoticon: "@^_^@", definition: "Cute happy face with swirling eyes. Digital cuteness overload.", expandedDefinition: "This emoticon radiates an extreme level of digital cuteness and happiness. The swirling '@' eyes combined with the cheerful mouth create an aura of irresistible adorableness. It's for when something is so cute, your digital being can barely contain its joy. Prepare for cuteness overload.", synonyms: ['Adorable', 'Overjoyed'], origin: "A combination for a very cute and happy face with swirling eyes.", examples: ["'Look at that puppy video @^_^@'", "'This new feature is just adorable @^_^@'"] },
+            { emoticon: "^_~", definition: "Wink with a happy eye. A friendly digital gesture.", expandedDefinition: "This emoticon conveys a playful, friendly wink. The upward caret suggests a happy eye, while the tilde is the winking action. It's a subtle way to show camaraderie, a shared joke, or a lighthearted tease. A warm digital glance.", synonyms: ['Playful wink', 'Friendly tease'], origin: "A cheerful wink using a caret for one eye and a tilde for the other.", examples: ["'Good job on that! ^_~'", "'You almost got me ^_~'"] },
+            { emoticon: "[o.o]", definition: "Shocked, with square eyes. Your digital eyes are wide with disbelief, like a robot witnessing a miracle.", expandedDefinition: "This emoticon portrays a robotic, wide-eyed shock. The square brackets suggest a rigid, mechanical face, while the 'o.o' eyes are wide with disbelief. It's for when a digital event is so unexpected, it causes a system-wide freeze. The robot's gasp.", synonyms: ['Robot shock', 'Stunned'], origin: "Square brackets for a rigid face with wide eyes, for robotic surprise.", examples: ["'The server just came back online [o.o]'", "'That data is insane [o.o]'"] },
+            { emoticon: "-_-@", definition: "Annoyed and sweating. When digital frustration is building, but you\'re trying to keep your cool.", expandedDefinition: "This emoticon captures suppressed digital frustration. The 'sweat drop' implies that annoyance is building, but the sender is actively trying to maintain composure. It's the digital sigh of a user about to reach their breaking point, but still holding it together. A ticking digital time bomb.", synonyms: ['Frustrated', 'Exasperated'], origin: "Combines an annoyed face with a sweat drop, showing building frustration.", examples: ["'The Wi-Fi keeps disconnecting -_-@'", "'Another 'urgent' email after hours -_-@'"] },
+            { emoticon: "._.", definition: "Neutral or confused. A very minimalist expression of digital apathy or mild bewilder.", expandedDefinition: "This emoticon represents a minimalist state of digital neutrality or mild confusion. The single dot for eyes conveys a blank stare, a lack of strong opinion, or a quiet bewilderment. It's the digital equivalent of a shrug when you have no idea what's on. The ultimate 'meh' face.", synonyms: ['Apathetic', 'Unsure'], origin: "A highly simplified face for neutral or minimal expression.", examples: ["'What was that supposed to mean? ._.'", "'I have no strong feelings about this ._.'"] },
+            { emoticon: "o.O", definition: "One eye open, one wide. Something subtle and confusing online.", expandedDefinition: "This emoticon conveys a subtle digital double-take or a hint of confusion. One eye is normal, the other wide, indicating that something online is slightly off or intriguing. It's for when you're trying to figure out if you just saw what you thought you saw. The digital head tilt.", synonyms: ['Perplexed', 'Curious'], origin: "One eye small, one large, for a curious or puzzled look.", examples: ["'Did I just see that? o.O'", "'That's an interesting approach o.O'"] },
+            { emoticon: "(_8^(|)", definition: "Homer Simpson. 'D\'oh!' in expandedDefinitional form.", expandedDefinition: "The digital embodiment of Homer Simpson's iconic 'D'oh!' The parentheses suggest his head, the '8' his eyes, the '^' his nose, and the '(|)' his gaping, confused mouth. It's for moments of profound digital stupidity, self-realization of error, or just a general sense of being bewildered by life. Iconic digital idiocy.", synonyms: ['D\'oh!', 'Confused Homer'], origin: "A creative ASCII art representation of Homer Simpson's face.", examples: ["'I forgot to save my work (_8^(|)'", "'I just walked into a spider web (_8^(|)'"] },
+            { emoticon: "{D", definition: "Vampire. A digital bite of playful aggression.", expandedDefinition: "This emoticon hints at playful menace or a vampire-like grin. The curly bracket suggests a raised brow or a menacing shape, combined with the wide 'D' mouth. It's for when you're feeling a bit mischievous, slightly aggressive, but ultimately harmless. The digital Count Dracula of banter.", synonyms: ['Mischievous', 'Playful threat'], origin: "A curly bracket used to form part of a mischievous or vampire-like face.", examples: ["'I'm coming for your data {D'", "'Don't cross me {D'"] },
+            { emoticon: "[=]", definition: "Robot. Operating strictly on digital logic.", expandedDefinition: "This emoticon signifies a state of pure digital processing, devoid of emotion. The square brackets and equals sign create a perfectly symmetrical, unfeeling robot face. It's for when you're operating solely on logic, delivering facts without emotional bias, or simply feel like a data-crunching machine. Resistance is futile.", synonyms: ['Logical', 'Emotionless'], origin: "Square brackets and an equals sign for a blocky, robotic face.", examples: ["'Calculating optimal strategy [=]'", "'Responding with factual data [=]'"] },
+            { emoticon: '(•_•) ( •_•)>⌐■-■ (⌐■_■)', definition: "The 'deal with it' sequence. Indicates a mic drop moment after delivering an unassailable (or incredibly arrogant) truth. Requires a high level of digital swag.", expandedDefinition: "This multi-part emoticon embodies the ultimate digital mic drop. It's deployed after delivering a devastating comeback, a profound truth, or a particularly sassy remark. It says, 'I've spoken, I'm right, and now I'm casually walking away from the digital explosion I just caused.' Requires immense digital confidence.", synonyms: ['Mic drop', 'Boss move'], origin: "Evolved from internet memes and reaction GIFs, designed to convey a sense of unchallengeable coolness and finality.", examples: ["'I just debugged the entire system in five minutes (•_•) ( •_•)>⌐■-■ (⌐■_■)'", "'I told them exactly what I thought (•_•) ( •_•)>⌐■-■ (⌐■_■)'"] }
+        ];
+
+        const dictionaryView = document.getElementById('dictionaryView');
+        const detailPageView = document.getElementById('detailPageView');
+
+        const detailEmoticon = document.getElementById('detailEmoticon');
+        const detailMainDefinition = document.getElementById('detailMainDefinition');
+        const detailExpandedDefinition = document.getElementById('detailExpandedDefinition');
+        const detailSynonyms = document.getElementById('detailSynonyms');
+        const detailOrigin = document.getElementById('detailOrigin');
+        const detailExamples = document.getElementById('detailExamples');
+        const backButton = document.getElementById('backButton');
+
+        const emoticonListDiv = document.getElementById('emoticonList');
+        const searchInput = document.getElementById('searchInput');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+
+        console.log("DOM elements retrieved.");
+
+        /**
+         * Renders the list of emoticons based on a filter.
+         * @param {string} filterText - The text to filter emoticons or definitions by.
+         */
+        function renderEmoticons(filterText = '') {
+            console.log("renderEmoticons called with filter:", filterText);
+            emoticonListDiv.innerHTML = '<h2>Loading emoticons...</h2>'; // Keep loading message while rendering
+            const lowerCaseFilter = filterText.toLowerCase();
+            let resultsFound = false;
+            let fragment = document.createDocumentFragment(); // Use a document fragment for better performance
+
+            emoticonData.forEach(item => {
+                // Check if emoticon or definition matches the filter
+                if (item.emoticon.toLowerCase().includes(lowerCaseFilter) ||
+                    item.definition.toLowerCase().includes(lowerCaseFilter)) {
+
+                    resultsFound = true;
+                    const card = document.createElement('div');
+                    card.classList.add('emoticon-card');
+
+                    const emoticonText = document.createElement('div');
+                    emoticonText.classList.add('emoticon-text');
+                    emoticonText.textContent = item.emoticon;
+
+                    const definitionText = document.createElement('p');
+                    definitionText.classList.add('emoticon-definition');
+                    definitionText.textContent = item.definition;
+
+                    // Add click listener to the definition for detail view
+                    definitionText.addEventListener('click', () => showDetailPage(item));
+
+                    card.appendChild(emoticonText);
+                    card.appendChild(definitionText);
+                    fragment.appendChild(card); // Append to fragment
+                }
+            });
+
+            emoticonListDiv.innerHTML = ''; // Clear the loading message
+            emoticonListDiv.appendChild(fragment); // Append all cards at once
+
+            // Show/hide no results message
+            if (resultsFound) {
+                noResultsMessage.style.display = 'none';
+                console.log("Emoticons rendered. Results found.");
+            } else {
+                noResultsMessage.style.display = 'block';
+                console.log("No emoticons match the filter.");
+            }
+            console.log("Emoticon list innerHTML after render (should not be empty if results found):", emoticonListDiv.innerHTML.substring(0, 100) + "..."); // Log first 100 chars
+        }
+
+        /**
+         * Shows the detail page for a given emoticon.
+         * @param {object} emoticon - The emoticon object with its details.
+         */
+        function showDetailPage(emoticon) {
+            console.log("Showing detail page for:", emoticon.emoticon);
+            console.log("Emoticon definition:", emoticon.definition); // Added for debugging
+            // Populate detail page elements
+            detailEmoticon.textContent = emoticon.emoticon;
+            detailMainDefinition.textContent = emoticon.definition;
+            detailExpandedDefinition.textContent = emoticon.expandedDefinition || "No expanded insight available for this emoticon. Its digital soul remains a mystery.";
+            console.log("detailMainDefinition textContent after assignment:", detailMainDefinition.textContent); // Added for debugging
+
+            // Clear previous lists
+            detailSynonyms.innerHTML = '';
+            detailExamples.innerHTML = '';
+
+            // Populate synonyms
+            if (emoticon.synonyms && emoticon.synonyms.length > 0) {
+                emoticon.synonyms.forEach(syn => {
+                    const li = document.createElement('li');
+                    li.textContent = syn;
+                    detailSynonyms.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "No documented digital doppelgängers.";
+                detailSynonyms.appendChild(li);
+            }
+
+            // Populate origin
+            detailOrigin.textContent = emoticon.origin || "Its digital origin is shrouded in the mists of the internet's early days.";
+
+            // Populate examples
+            if (emoticon.examples && emoticon.examples.length > 0) {
+                emoticon.examples.forEach(ex => {
+                    const li = document.createElement('li');
+                    li.textContent = ex;
+                    detailExamples.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                    li.textContent = "No satirical usage examples have been recorded for this one. Proceed with digital caution.";
+                detailExamples.appendChild(li);
+            }
+
+            // Show detail page, hide dictionary view
+            dictionaryView.style.display = 'none';
+            detailPageView.style.display = 'flex';
+            window.scrollTo(0, 0); // Scroll to top of the page
+            console.log("Detail page displayed.");
+        }
+
+        /**
+         * Hides the detail page and shows the dictionary list.
+         */
+        function showDictionaryList() {
+            console.log("Returning to dictionary list.");
+            detailPageView.style.display = 'none';
+            dictionaryView.style.display = 'flex';
+            window.scrollTo(0, 0); // Scroll to top of the page
+        }
+
+        // Add event listener for search input
+        searchInput.addEventListener('input', (event) => {
+            console.log("Search input changed:", event.target.value);
+            renderEmoticons(event.target.value);
+        });
+
+        // Add event listener for back button on detail page
+        backButton.addEventListener('click', showDictionaryList);
+
+        // Initial render when the window loads
+        window.onload = function() {
+            console.log("Window loaded. Attempting initial render.");
+            console.log("Emoticon Data Length:", emoticonData.length); // Check if data is loaded
+            renderEmoticons();
+            console.log("Initial render complete.");
+        };
+    </script>
+</body>
+</html>
+�
